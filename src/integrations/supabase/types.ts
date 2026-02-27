@@ -14,16 +14,430 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cognitive_profiles: {
+        Row: {
+          cognitive_type: string
+          confidence_score: number | null
+          created_at: string
+          feature_vector: Json | null
+          id: string
+          last_evaluated: string
+          previous_types: Json | null
+          reasoning: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cognitive_type?: string
+          confidence_score?: number | null
+          created_at?: string
+          feature_vector?: Json | null
+          id?: string
+          last_evaluated?: string
+          previous_types?: Json | null
+          reasoning?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cognitive_type?: string
+          confidence_score?: number | null
+          created_at?: string
+          feature_vector?: Json | null
+          id?: string
+          last_evaluated?: string
+          previous_types?: Json | null
+          reasoning?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      performance_reports: {
+        Row: {
+          accuracy_trend: Json | null
+          cognitive_type_at_time: string | null
+          created_at: string
+          id: string
+          improvement_percentage: number | null
+          period_end: string
+          period_start: string
+          report_data: Json | null
+          report_type: string
+          response_time_trend: Json | null
+          retention_risk_score: number | null
+          user_id: string
+        }
+        Insert: {
+          accuracy_trend?: Json | null
+          cognitive_type_at_time?: string | null
+          created_at?: string
+          id?: string
+          improvement_percentage?: number | null
+          period_end: string
+          period_start: string
+          report_data?: Json | null
+          report_type?: string
+          response_time_trend?: Json | null
+          retention_risk_score?: number | null
+          user_id: string
+        }
+        Update: {
+          accuracy_trend?: Json | null
+          cognitive_type_at_time?: string | null
+          created_at?: string
+          id?: string
+          improvement_percentage?: number | null
+          period_end?: string
+          period_start?: string
+          report_data?: Json | null
+          report_type?: string
+          response_time_trend?: Json | null
+          retention_risk_score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      question_attempts: {
+        Row: {
+          abandonment_flag: boolean
+          attempted_at: string
+          difficulty_level: number | null
+          hint_used: boolean
+          id: string
+          is_correct: boolean
+          number_of_retries: number
+          question_id: string
+          response_time_ms: number | null
+          selected_answer: string | null
+          session_id: string
+          time_between_attempts_ms: number | null
+          topic_id: string | null
+          user_id: string
+        }
+        Insert: {
+          abandonment_flag?: boolean
+          attempted_at?: string
+          difficulty_level?: number | null
+          hint_used?: boolean
+          id?: string
+          is_correct?: boolean
+          number_of_retries?: number
+          question_id: string
+          response_time_ms?: number | null
+          selected_answer?: string | null
+          session_id: string
+          time_between_attempts_ms?: number | null
+          topic_id?: string | null
+          user_id: string
+        }
+        Update: {
+          abandonment_flag?: boolean
+          attempted_at?: string
+          difficulty_level?: number | null
+          hint_used?: boolean
+          id?: string
+          is_correct?: boolean
+          number_of_retries?: number
+          question_id?: string
+          response_time_ms?: number | null
+          selected_answer?: string | null
+          session_id?: string
+          time_between_attempts_ms?: number | null
+          topic_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_attempts_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_attempts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "session_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_attempts_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          created_by: string | null
+          difficulty_level: number
+          hint: string | null
+          id: string
+          options: Json
+          question_text: string
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          created_by?: string | null
+          difficulty_level?: number
+          hint?: string | null
+          id?: string
+          options?: Json
+          question_text: string
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          created_by?: string | null
+          difficulty_level?: number
+          hint?: string | null
+          id?: string
+          options?: Json
+          question_text?: string
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recommendations: {
+        Row: {
+          cognitive_type: string | null
+          created_at: string
+          focus_topics: Json | null
+          id: string
+          is_active: boolean
+          learning_strategy_summary: string | null
+          practice_type: string | null
+          recommended_difficulty: number | null
+          review_schedule: Json | null
+          time_limit_mode: string | null
+          user_id: string
+        }
+        Insert: {
+          cognitive_type?: string | null
+          created_at?: string
+          focus_topics?: Json | null
+          id?: string
+          is_active?: boolean
+          learning_strategy_summary?: string | null
+          practice_type?: string | null
+          recommended_difficulty?: number | null
+          review_schedule?: Json | null
+          time_limit_mode?: string | null
+          user_id: string
+        }
+        Update: {
+          cognitive_type?: string | null
+          created_at?: string
+          focus_topics?: Json | null
+          id?: string
+          is_active?: boolean
+          learning_strategy_summary?: string | null
+          practice_type?: string | null
+          recommended_difficulty?: number | null
+          review_schedule?: Json | null
+          time_limit_mode?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      session_logs: {
+        Row: {
+          ended_at: string | null
+          id: string
+          session_duration_seconds: number | null
+          started_at: string
+          topic_id: string | null
+          total_correct: number
+          total_questions_attempted: number
+          total_retries: number
+          user_id: string
+        }
+        Insert: {
+          ended_at?: string | null
+          id?: string
+          session_duration_seconds?: number | null
+          started_at?: string
+          topic_id?: string | null
+          total_correct?: number
+          total_questions_attempted?: number
+          total_retries?: number
+          user_id: string
+        }
+        Update: {
+          ended_at?: string | null
+          id?: string
+          session_duration_seconds?: number | null
+          started_at?: string
+          topic_id?: string | null
+          total_correct?: number
+          total_questions_attempted?: number
+          total_retries?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_logs_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topic_performance: {
+        Row: {
+          accuracy_rate: number | null
+          avg_response_time_ms: number | null
+          avg_retries: number | null
+          id: string
+          last_updated: string
+          topic_id: string
+          total_attempts: number
+          total_correct: number
+          user_id: string
+        }
+        Insert: {
+          accuracy_rate?: number | null
+          avg_response_time_ms?: number | null
+          avg_retries?: number | null
+          id?: string
+          last_updated?: string
+          topic_id: string
+          total_attempts?: number
+          total_correct?: number
+          user_id: string
+        }
+        Update: {
+          accuracy_rate?: number | null
+          avg_response_time_ms?: number | null
+          avg_retries?: number | null
+          id?: string
+          last_updated?: string
+          topic_id?: string
+          total_attempts?: number
+          total_correct?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_performance_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "teacher" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +564,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "teacher", "student"],
+    },
   },
 } as const
