@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Play, CheckCircle2, XCircle, Lightbulb, SkipForward, Trophy, Zap, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
+import CognitiveModeIndicator from "@/components/CognitiveModeIndicator";
 
 type QuizState = "select" | "active" | "results";
 type Prediction = {
@@ -39,6 +40,9 @@ export default function TakeQuiz() {
   const quizStartTimeRef = useRef<number>(0);
   const [prediction, setPrediction] = useState<Prediction>(null);
   const [postQuizInsight, setPostQuizInsight] = useState<string | null>(null);
+  const [allResponseTimes, setAllResponseTimes] = useState<number[]>([]);
+  const [correctSoFar, setCorrectSoFar] = useState(0);
+  const [totalSoFar, setTotalSoFar] = useState(0);
 
   useEffect(() => {
     supabase.from("topics").select("*").order("name").then(({ data }) => setTopics(data || []));
@@ -57,6 +61,9 @@ export default function TakeQuiz() {
     setSessionId(session?.id || null);
     setCurrentIdx(0);
     setResults({ correct: 0, total: 0, retries: 0, pointsEarned: 0 });
+    setAllResponseTimes([]);
+    setCorrectSoFar(0);
+    setTotalSoFar(0);
     setQuizState("active");
     setPrediction(null);
     setPostQuizInsight(null);
@@ -95,6 +102,9 @@ export default function TakeQuiz() {
 
     setSelectedAnswer(answer);
     setAnswered(true);
+    setAllResponseTimes(prev => [...prev, responseTime]);
+    if (isCorrect) setCorrectSoFar(prev => prev + 1);
+    setTotalSoFar(prev => prev + 1);
 
     // Compare prediction vs actual for cognitive events
     if (prediction && user && sessionId) {
@@ -302,6 +312,15 @@ export default function TakeQuiz() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
+      {/* Live Cognitive Mode Indicator */}
+      <CognitiveModeIndicator
+        responseTimesMs={allResponseTimes}
+        retries={retries + results.retries}
+        correctCount={correctSoFar}
+        totalCount={totalSoFar}
+        sessionStartTime={quizStartTimeRef.current}
+      />
+
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">Question {currentIdx + 1} of {questions.length}</div>
         <Badge variant="secondary">Difficulty: {q.difficulty_level}/5</Badge>

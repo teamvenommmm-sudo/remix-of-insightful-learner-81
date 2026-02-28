@@ -18,6 +18,8 @@ import Leaderboard from "./dashboard/Leaderboard";
 import CognitiveDrift from "./dashboard/CognitiveDrift";
 import CognitiveEnergy from "./dashboard/CognitiveEnergy";
 import TeacherCognitiveIntel from "./dashboard/TeacherCognitiveIntel";
+import AdminSettings from "./dashboard/AdminSettings";
+import SocraticTutor from "@/components/SocraticTutor";
 
 function OverviewRouter() {
   const { role } = useAuth();
@@ -45,8 +47,9 @@ export default function Dashboard() {
         <Route path="students" element={<StudentAnalysis />} />
         <Route path="analytics" element={<TeacherAnalytics />} />
         <Route path="users" element={<UserManagement />} />
-        <Route path="settings" element={<div className="text-muted-foreground">Settings page coming soon</div>} />
+        <Route path="settings" element={<AdminSettings />} />
       </Routes>
+      <SocraticTutor />
     </DashboardLayout>
   );
 }

@@ -2,3 +2,6 @@ project_id = "hdcxppfvoqzsqttjldpw"
 
 [functions.cognitive-intelligence]
 verify_jwt = false
+
+[functions.socratic-tutor]
+verify_jwt = false
