@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Brain, LayoutDashboard, BookOpen, BarChart3, Lightbulb, FileText,
-  Users, Settings, LogOut, GraduationCap, Layers, Activity
+  Users, Settings, LogOut, GraduationCap, Layers, Activity, Trophy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ const studentLinks = [
   { to: "/dashboard/sessions", label: "Session Insights", icon: Activity },
   { to: "/dashboard/recommendations", label: "Recommendations", icon: Lightbulb },
   { to: "/dashboard/reports", label: "Reports", icon: FileText },
+  { to: "/dashboard/leaderboard", label: "Leaderboard", icon: Trophy },
 ];
 
 const teacherLinks = [
@@ -46,7 +48,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card">
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
           <Brain className="h-6 w-6 text-primary" />
@@ -75,7 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 space-y-2">
           <div className="mb-3 flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
               {profile?.display_name?.[0]?.toUpperCase() || "U"}
@@ -85,6 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="text-xs capitalize text-muted-foreground">{role}</p>
             </div>
           </div>
+          <ThemeToggle />
           <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" />
             Sign Out
@@ -92,7 +94,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="ml-64 flex-1 p-8">
         {children}
       </main>
