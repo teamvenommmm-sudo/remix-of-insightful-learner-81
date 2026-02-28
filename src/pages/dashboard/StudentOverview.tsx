@@ -3,24 +3,28 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CognitiveBadge from "@/components/CognitiveBadge";
-import { Activity, Brain, Target, TrendingUp } from "lucide-react";
+import { Activity, Brain, Target, TrendingUp, Trophy, Flame, Award } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function StudentOverview() {
   const { user } = useAuth();
   const [cogProfile, setCogProfile] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [gamification, setGamification] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [cogRes, sessRes] = await Promise.all([
+      const [cogRes, sessRes, gamRes] = await Promise.all([
         supabase.from("cognitive_profiles").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("session_logs").select("*").eq("user_id", user.id).order("started_at", { ascending: true }).limit(20),
+        supabase.from("student_gamification").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
       setCogProfile(cogRes.data);
       setSessions(sessRes.data || []);
+      setGamification(gamRes.data);
       setLoading(false);
     };
     load();
@@ -32,6 +36,8 @@ export default function StudentOverview() {
   }));
 
   if (loading) return <div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
+
+  const badges: string[] = gamification?.badges && Array.isArray(gamification.badges) ? gamification.badges : [];
 
   return (
     <div className="space-y-6">
@@ -89,6 +95,44 @@ export default function StudentOverview() {
                 ? `${accuracyData[accuracyData.length - 1].accuracy - accuracyData[0].accuracy > 0 ? "+" : ""}${accuracyData[accuracyData.length - 1].accuracy - accuracyData[0].accuracy}%`
                 : "N/A"}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Gamification Stats */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Points</CardTitle>
+            <Trophy className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{gamification?.total_points || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
+            <Flame className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{gamification?.current_streak || 0} days</div>
+            <p className="text-xs text-muted-foreground">Best: {gamification?.longest_streak || 0} days</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Badges</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {badges.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {badges.map((b) => <Badge key={b} variant="secondary" className="text-xs">{b}</Badge>)}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Complete quizzes to earn badges!</p>
+            )}
           </CardContent>
         </Card>
       </div>

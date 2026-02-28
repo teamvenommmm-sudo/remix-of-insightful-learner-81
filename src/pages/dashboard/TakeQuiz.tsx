@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Play, CheckCircle2, XCircle, Lightbulb, SkipForward } from "lucide-react";
+import { Play, CheckCircle2, XCircle, Lightbulb, SkipForward, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type QuizState = "select" | "active" | "results";
@@ -24,10 +24,11 @@ export default function TakeQuiz() {
   const [answered, setAnswered] = useState(false);
   const [quizState, setQuizState] = useState<QuizState>("select");
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [results, setResults] = useState({ correct: 0, total: 0, retries: 0 });
+  const [results, setResults] = useState({ correct: 0, total: 0, retries: 0, pointsEarned: 0 });
   const [retries, setRetries] = useState(0);
   const startTimeRef = useRef<number>(0);
   const lastAttemptTimeRef = useRef<number>(0);
+  const quizStartTimeRef = useRef<number>(0);
 
   useEffect(() => {
     supabase.from("topics").select("*").order("name").then(({ data }) => setTopics(data || []));
@@ -45,10 +46,11 @@ export default function TakeQuiz() {
     setQuestions(qs);
     setSessionId(session?.id || null);
     setCurrentIdx(0);
-    setResults({ correct: 0, total: 0, retries: 0 });
+    setResults({ correct: 0, total: 0, retries: 0, pointsEarned: 0 });
     setQuizState("active");
     startTimeRef.current = Date.now();
     lastAttemptTimeRef.current = Date.now();
+    quizStartTimeRef.current = Date.now();
   };
 
   const handleAnswer = async (answer: string) => {
@@ -60,25 +62,20 @@ export default function TakeQuiz() {
     const timeBetween = retries > 0 ? now - lastAttemptTimeRef.current : null;
 
     await supabase.from("question_attempts").insert({
-      user_id: user.id,
-      session_id: sessionId,
-      question_id: q.id,
-      topic_id: q.topic_id,
-      difficulty_level: q.difficulty_level,
-      response_time_ms: responseTime,
-      number_of_retries: retries,
-      is_correct: isCorrect,
-      hint_used: showHint,
-      time_between_attempts_ms: timeBetween,
-      abandonment_flag: false,
-      selected_answer: answer,
+      user_id: user.id, session_id: sessionId, question_id: q.id, topic_id: q.topic_id,
+      difficulty_level: q.difficulty_level, response_time_ms: responseTime,
+      number_of_retries: retries, is_correct: isCorrect, hint_used: showHint,
+      time_between_attempts_ms: timeBetween, abandonment_flag: false, selected_answer: answer,
     });
 
     setSelectedAnswer(answer);
     setAnswered(true);
 
+    let pts = 0;
     if (isCorrect) {
-      setResults((r) => ({ ...r, correct: r.correct + 1, total: r.total + 1, retries: r.retries + retries }));
+      pts += 10;
+      if (retries === 0) pts += 5;
+      setResults((r) => ({ ...r, correct: r.correct + 1, total: r.total + 1, retries: r.retries + retries, pointsEarned: r.pointsEarned + pts }));
     } else {
       setResults((r) => ({ ...r, total: r.total + 1, retries: r.retries + retries }));
     }
@@ -119,17 +116,74 @@ export default function TakeQuiz() {
 
   const finishQuiz = async () => {
     if (!sessionId || !user) return;
-    const sessionStart = startTimeRef.current;
-    const duration = Math.round((Date.now() - sessionStart) / 1000);
+    const duration = Math.round((Date.now() - quizStartTimeRef.current) / 1000);
+    
+    const finalCorrect = results.correct;
+    const finalTotal = results.total;
+    const finalRetries = results.retries;
+    let finalPoints = results.pointsEarned;
+
+    // Perfect quiz bonus
+    if (finalTotal > 0 && finalCorrect === finalTotal) finalPoints += 20;
+
     await supabase.from("session_logs").update({
       ended_at: new Date().toISOString(),
-      total_questions_attempted: results.total,
-      total_correct: results.correct,
-      total_retries: results.retries,
+      total_questions_attempted: finalTotal,
+      total_correct: finalCorrect,
+      total_retries: finalRetries,
       session_duration_seconds: duration,
     }).eq("id", sessionId);
 
-    // Trigger AI analysis (fire and forget)
+    // Update gamification
+    const today = new Date().toISOString().split("T")[0];
+    const { data: existing } = await supabase
+      .from("student_gamification")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (existing) {
+      const lastDate = existing.last_activity_date;
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+      let newStreak = lastDate === yesterday ? existing.current_streak + 1 : lastDate === today ? existing.current_streak : 1;
+      if (newStreak > 1) finalPoints += 15; // streak bonus
+
+      const newBadges = [...(Array.isArray(existing.badges) ? existing.badges as string[] : [])];
+      const quizzesNow = existing.quizzes_completed + 1;
+      if (quizzesNow === 1 && !newBadges.includes("First Quiz")) newBadges.push("First Quiz");
+      if (finalTotal > 0 && finalCorrect === finalTotal && !newBadges.includes("Perfect Score")) newBadges.push("Perfect Score");
+      if (newStreak >= 7 && !newBadges.includes("Streak Master")) newBadges.push("Streak Master");
+
+      // Check Topic Explorer
+      const { count } = await supabase.from("session_logs").select("topic_id", { count: "exact" }).eq("user_id", user.id);
+      if ((count || 0) >= 5 && !newBadges.includes("Topic Explorer")) newBadges.push("Topic Explorer");
+
+      await supabase.from("student_gamification").update({
+        total_points: existing.total_points + finalPoints,
+        current_streak: newStreak,
+        longest_streak: Math.max(existing.longest_streak, newStreak),
+        last_activity_date: today,
+        badges: newBadges,
+        quizzes_completed: quizzesNow,
+      }).eq("user_id", user.id);
+    } else {
+      const newBadges: string[] = ["First Quiz"];
+      if (finalTotal > 0 && finalCorrect === finalTotal) newBadges.push("Perfect Score");
+
+      await supabase.from("student_gamification").insert({
+        user_id: user.id,
+        total_points: finalPoints,
+        current_streak: 1,
+        longest_streak: 1,
+        last_activity_date: today,
+        badges: newBadges,
+        quizzes_completed: 1,
+      });
+    }
+
+    setResults((r) => ({ ...r, pointsEarned: finalPoints }));
+
+    // Trigger AI analysis
     supabase.functions.invoke("analyze-cognitive", { body: { user_id: user.id } }).catch(console.error);
 
     setQuizState("results");
@@ -168,6 +222,10 @@ export default function TakeQuiz() {
               <div><span className="font-bold text-lg">{results.correct}</span><br/>Correct</div>
               <div><span className="font-bold text-lg">{results.total - results.correct}</span><br/>Incorrect</div>
               <div><span className="font-bold text-lg">{results.retries}</span><br/>Retries</div>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-primary">
+              <Trophy className="h-5 w-5" />
+              <span className="text-lg font-bold">+{results.pointsEarned} points earned!</span>
             </div>
             <Progress value={pct} className="h-3" />
             <Button onClick={() => setQuizState("select")} className="w-full">Take Another Quiz</Button>

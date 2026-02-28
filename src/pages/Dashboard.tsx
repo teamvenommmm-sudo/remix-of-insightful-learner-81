@@ -14,6 +14,7 @@ import Reports from "./dashboard/Reports";
 import StudentAnalysis from "./dashboard/StudentAnalysis";
 import TeacherAnalytics from "./dashboard/TeacherAnalytics";
 import UserManagement from "./dashboard/UserManagement";
+import Leaderboard from "./dashboard/Leaderboard";
 
 function OverviewRouter() {
   const { role } = useAuth();
@@ -32,6 +33,7 @@ export default function Dashboard() {
         <Route path="sessions" element={<SessionInsights />} />
         <Route path="recommendations" element={<Recommendations />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="leaderboard" element={<Leaderboard />} />
         <Route path="manage-topics" element={<ManageTopics />} />
         <Route path="manage-questions" element={<ManageQuestions />} />
         <Route path="students" element={<StudentAnalysis />} />

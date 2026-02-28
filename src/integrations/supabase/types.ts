@@ -331,6 +331,45 @@ export type Database = {
           },
         ]
       }
+      student_gamification: {
+        Row: {
+          badges: Json
+          created_at: string
+          current_streak: number
+          id: string
+          last_activity_date: string | null
+          longest_streak: number
+          quizzes_completed: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badges?: Json
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number
+          quizzes_completed?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badges?: Json
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number
+          quizzes_completed?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       topic_performance: {
         Row: {
           accuracy_rate: number | null
