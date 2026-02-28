@@ -1,1 +1,4 @@
 project_id = "hdcxppfvoqzsqttjldpw"
+
+[functions.cognitive-intelligence]
+verify_jwt = false

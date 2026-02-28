@@ -15,6 +15,9 @@ import StudentAnalysis from "./dashboard/StudentAnalysis";
 import TeacherAnalytics from "./dashboard/TeacherAnalytics";
 import UserManagement from "./dashboard/UserManagement";
 import Leaderboard from "./dashboard/Leaderboard";
+import CognitiveDrift from "./dashboard/CognitiveDrift";
+import CognitiveEnergy from "./dashboard/CognitiveEnergy";
+import TeacherCognitiveIntel from "./dashboard/TeacherCognitiveIntel";
 
 function OverviewRouter() {
   const { role } = useAuth();
@@ -34,6 +37,9 @@ export default function Dashboard() {
         <Route path="recommendations" element={<Recommendations />} />
         <Route path="reports" element={<Reports />} />
         <Route path="leaderboard" element={<Leaderboard />} />
+        <Route path="cognitive-drift" element={<CognitiveDrift />} />
+        <Route path="cognitive-energy" element={<CognitiveEnergy />} />
+        <Route path="cognitive-intel" element={<TeacherCognitiveIntel />} />
         <Route path="manage-topics" element={<ManageTopics />} />
         <Route path="manage-questions" element={<ManageQuestions />} />
         <Route path="students" element={<StudentAnalysis />} />

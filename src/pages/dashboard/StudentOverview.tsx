@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CognitiveBadge from "@/components/CognitiveBadge";
-import { Activity, Brain, Target, TrendingUp, Trophy, Flame, Award } from "lucide-react";
+import { Activity, Brain, Target, TrendingUp, Trophy, Flame, Award, Shield, Fingerprint } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -12,19 +12,25 @@ export default function StudentOverview() {
   const [cogProfile, setCogProfile] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const [gamification, setGamification] = useState<any>(null);
+  const [fingerprint, setFingerprint] = useState<any>(null);
+  const [latestHistory, setLatestHistory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [cogRes, sessRes, gamRes] = await Promise.all([
+      const [cogRes, sessRes, gamRes, fpRes, histRes] = await Promise.all([
         supabase.from("cognitive_profiles").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("session_logs").select("*").eq("user_id", user.id).order("started_at", { ascending: true }).limit(20),
         supabase.from("student_gamification").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("behavioral_fingerprints").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("cognitive_history").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
       ]);
       setCogProfile(cogRes.data);
       setSessions(sessRes.data || []);
       setGamification(gamRes.data);
+      setFingerprint(fpRes.data);
+      setLatestHistory(histRes.data?.[0] || null);
       setLoading(false);
     };
     load();
@@ -95,6 +101,30 @@ export default function StudentOverview() {
                 ? `${accuracyData[accuracyData.length - 1].accuracy - accuracyData[0].accuracy > 0 ? "+" : ""}${accuracyData[accuracyData.length - 1].accuracy - accuracyData[0].accuracy}%`
                 : "N/A"}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Cognitive Intelligence Stats */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Cognitive Stability</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{latestHistory?.stability_index?.toFixed(0) ?? "N/A"}</div>
+            <p className="text-xs text-muted-foreground">{latestHistory?.stability_label || "Not evaluated yet"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Predictability (CPI)</CardTitle>
+            <Fingerprint className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{fingerprint?.cognitive_predictability_index?.toFixed(0) ?? "N/A"}</div>
+            <p className="text-xs text-muted-foreground">{fingerprint?.cpi_label || "Complete quizzes to calculate"}</p>
           </CardContent>
         </Card>
       </div>

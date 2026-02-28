@@ -14,6 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
+      behavioral_fingerprints: {
+        Row: {
+          cognitive_predictability_index: number | null
+          cpi_label: string | null
+          created_at: string
+          error_clustering_behavior: Json | null
+          fingerprint_id: string
+          hesitation_burst_frequency: number | null
+          id: string
+          last_updated: string
+          response_rhythm_pattern: Json | null
+          retry_timing_pattern: Json | null
+          signature_summary: string | null
+          speed_fluctuation_pattern: Json | null
+          user_id: string
+        }
+        Insert: {
+          cognitive_predictability_index?: number | null
+          cpi_label?: string | null
+          created_at?: string
+          error_clustering_behavior?: Json | null
+          fingerprint_id: string
+          hesitation_burst_frequency?: number | null
+          id?: string
+          last_updated?: string
+          response_rhythm_pattern?: Json | null
+          retry_timing_pattern?: Json | null
+          signature_summary?: string | null
+          speed_fluctuation_pattern?: Json | null
+          user_id: string
+        }
+        Update: {
+          cognitive_predictability_index?: number | null
+          cpi_label?: string | null
+          created_at?: string
+          error_clustering_behavior?: Json | null
+          fingerprint_id?: string
+          hesitation_burst_frequency?: number | null
+          id?: string
+          last_updated?: string
+          response_rhythm_pattern?: Json | null
+          retry_timing_pattern?: Json | null
+          signature_summary?: string | null
+          speed_fluctuation_pattern?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cognitive_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cognitive_history: {
+        Row: {
+          cognitive_type: string
+          confidence_score: number | null
+          created_at: string
+          feature_vector: Json | null
+          id: string
+          reasoning: string | null
+          stability_index: number | null
+          stability_label: string | null
+          user_id: string
+        }
+        Insert: {
+          cognitive_type: string
+          confidence_score?: number | null
+          created_at?: string
+          feature_vector?: Json | null
+          id?: string
+          reasoning?: string | null
+          stability_index?: number | null
+          stability_label?: string | null
+          user_id: string
+        }
+        Update: {
+          cognitive_type?: string
+          confidence_score?: number | null
+          created_at?: string
+          feature_vector?: Json | null
+          id?: string
+          reasoning?: string | null
+          stability_index?: number | null
+          stability_label?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cognitive_profiles: {
         Row: {
           cognitive_type: string
@@ -49,6 +163,81 @@ export type Database = {
           previous_types?: Json | null
           reasoning?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      energy_profiles: {
+        Row: {
+          accuracy_decay_rate: number | null
+          avg_session_fatigue_point_minutes: number | null
+          best_performance_hour: number | null
+          created_at: string
+          energy_curve_data: Json | null
+          id: string
+          last_updated: string
+          optimal_time_slots: Json | null
+          session_duration_recommendation_minutes: number | null
+          user_id: string
+        }
+        Insert: {
+          accuracy_decay_rate?: number | null
+          avg_session_fatigue_point_minutes?: number | null
+          best_performance_hour?: number | null
+          created_at?: string
+          energy_curve_data?: Json | null
+          id?: string
+          last_updated?: string
+          optimal_time_slots?: Json | null
+          session_duration_recommendation_minutes?: number | null
+          user_id: string
+        }
+        Update: {
+          accuracy_decay_rate?: number | null
+          avg_session_fatigue_point_minutes?: number | null
+          best_performance_hour?: number | null
+          created_at?: string
+          energy_curve_data?: Json | null
+          id?: string
+          last_updated?: string
+          optimal_time_slots?: Json | null
+          session_duration_recommendation_minutes?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      misconception_patterns: {
+        Row: {
+          confusion_cluster: Json | null
+          created_at: string
+          example_questions: Json | null
+          frequency: number
+          id: string
+          last_observed: string
+          misconception_type: string
+          topic_id: string | null
+          user_id: string
+        }
+        Insert: {
+          confusion_cluster?: Json | null
+          created_at?: string
+          example_questions?: Json | null
+          frequency?: number
+          id?: string
+          last_observed?: string
+          misconception_type: string
+          topic_id?: string | null
+          user_id: string
+        }
+        Update: {
+          confusion_cluster?: Json | null
+          created_at?: string
+          example_questions?: Json | null
+          frequency?: number
+          id?: string
+          last_observed?: string
+          misconception_type?: string
+          topic_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -94,6 +283,60 @@ export type Database = {
           report_type?: string
           response_time_trend?: Json | null
           retention_risk_score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prediction_logs: {
+        Row: {
+          actual_is_correct: boolean | null
+          actual_response_time_ms: number | null
+          actual_retries: number | null
+          created_at: string
+          deviation_score: number | null
+          event_type: string | null
+          id: string
+          predicted_error_probability: number | null
+          predicted_hesitation_risk: number | null
+          predicted_mistake_type: string | null
+          predicted_response_time_ms: number | null
+          predicted_retry_probability: number | null
+          question_id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          actual_is_correct?: boolean | null
+          actual_response_time_ms?: number | null
+          actual_retries?: number | null
+          created_at?: string
+          deviation_score?: number | null
+          event_type?: string | null
+          id?: string
+          predicted_error_probability?: number | null
+          predicted_hesitation_risk?: number | null
+          predicted_mistake_type?: string | null
+          predicted_response_time_ms?: number | null
+          predicted_retry_probability?: number | null
+          question_id: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          actual_is_correct?: boolean | null
+          actual_response_time_ms?: number | null
+          actual_retries?: number | null
+          created_at?: string
+          deviation_score?: number | null
+          event_type?: string | null
+          id?: string
+          predicted_error_probability?: number | null
+          predicted_hesitation_risk?: number | null
+          predicted_mistake_type?: string | null
+          predicted_response_time_ms?: number | null
+          predicted_retry_probability?: number | null
+          question_id?: string
+          session_id?: string
           user_id?: string
         }
         Relationships: []
