@@ -28,7 +28,7 @@ export default function UserManagement() {
   useEffect(() => { load(); }, []);
 
   const changeRole = async (userId: string, newRole: string) => {
-    const { error } = await supabase.from("user_roles").update({ role: newRole }).eq("user_id", userId);
+    const { error } = await supabase.from("user_roles").update({ role: newRole as any }).eq("user_id", userId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
