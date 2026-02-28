@@ -7,10 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Play, CheckCircle2, XCircle, Lightbulb, SkipForward, Trophy } from "lucide-react";
+import { Play, CheckCircle2, XCircle, Lightbulb, SkipForward, Trophy, Zap, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type QuizState = "select" | "active" | "results";
+type Prediction = {
+  predicted_response_time_ms: number;
+  predicted_retry_probability: number;
+  predicted_error_probability: number;
+  predicted_mistake_type: string;
+  predicted_hesitation_risk: number;
+  confidence_instability: number;
+} | null;
 
 export default function TakeQuiz() {
   const { user } = useAuth();
@@ -29,6 +37,8 @@ export default function TakeQuiz() {
   const startTimeRef = useRef<number>(0);
   const lastAttemptTimeRef = useRef<number>(0);
   const quizStartTimeRef = useRef<number>(0);
+  const [prediction, setPrediction] = useState<Prediction>(null);
+  const [postQuizInsight, setPostQuizInsight] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.from("topics").select("*").order("name").then(({ data }) => setTopics(data || []));
@@ -48,9 +58,24 @@ export default function TakeQuiz() {
     setCurrentIdx(0);
     setResults({ correct: 0, total: 0, retries: 0, pointsEarned: 0 });
     setQuizState("active");
+    setPrediction(null);
+    setPostQuizInsight(null);
     startTimeRef.current = Date.now();
     lastAttemptTimeRef.current = Date.now();
     quizStartTimeRef.current = Date.now();
+
+    // Fetch shadow prediction for first question
+    fetchPrediction(qs[0]);
+  };
+
+  const fetchPrediction = async (q: any) => {
+    if (!user) return;
+    try {
+      const { data } = await supabase.functions.invoke("cognitive-intelligence", {
+        body: { user_id: user.id, action: "predict", question_data: { topic_id: q.topic_id, difficulty_level: q.difficulty_level, hint: q.hint } },
+      });
+      if (data && !data.error) setPrediction(data);
+    } catch { /* prediction is optional */ }
   };
 
   const handleAnswer = async (answer: string) => {
@@ -70,6 +95,38 @@ export default function TakeQuiz() {
 
     setSelectedAnswer(answer);
     setAnswered(true);
+
+    // Compare prediction vs actual for cognitive events
+    if (prediction && user && sessionId) {
+      const deviationScore = Math.abs((prediction.predicted_error_probability > 0.5 ? 0 : 1) - (isCorrect ? 1 : 0));
+      let eventType: string | null = null;
+      if (prediction.predicted_error_probability > 0.6 && isCorrect) {
+        eventType = "breakthrough";
+        setPostQuizInsight("AI predicted you might struggle — but you got it right! 🎉");
+      } else if (prediction.predicted_error_probability < 0.3 && !isCorrect) {
+        eventType = "stress";
+      }
+
+      supabase.from("prediction_logs").insert({
+        user_id: user.id, question_id: q.id, session_id: sessionId,
+        predicted_response_time_ms: prediction.predicted_response_time_ms,
+        predicted_retry_probability: prediction.predicted_retry_probability,
+        predicted_error_probability: prediction.predicted_error_probability,
+        predicted_mistake_type: prediction.predicted_mistake_type,
+        predicted_hesitation_risk: prediction.predicted_hesitation_risk,
+        actual_response_time_ms: responseTime, actual_is_correct: isCorrect, actual_retries: retries,
+        deviation_score: deviationScore, event_type: eventType,
+      }).then(() => {});
+
+      if (eventType) {
+        supabase.from("cognitive_events").insert({
+          user_id: user.id, event_type: eventType, session_id: sessionId,
+          description: eventType === "breakthrough"
+            ? `Predicted ${Math.round(prediction.predicted_error_probability * 100)}% error probability but answered correctly`
+            : `Unexpected failure despite ${Math.round((1 - prediction.predicted_error_probability) * 100)}% predicted success`,
+        }).then(() => {});
+      }
+    }
 
     let pts = 0;
     if (isCorrect) {
@@ -92,13 +149,17 @@ export default function TakeQuiz() {
     if (currentIdx + 1 >= questions.length) {
       finishQuiz();
     } else {
-      setCurrentIdx((i) => i + 1);
+      const nextIdx = currentIdx + 1;
+      setCurrentIdx(nextIdx);
       setSelectedAnswer(null);
       setAnswered(false);
       setShowHint(false);
       setRetries(0);
+      setPrediction(null);
+      setPostQuizInsight(null);
       startTimeRef.current = Date.now();
       lastAttemptTimeRef.current = Date.now();
+      fetchPrediction(questions[nextIdx]);
     }
   };
 
@@ -183,8 +244,8 @@ export default function TakeQuiz() {
 
     setResults((r) => ({ ...r, pointsEarned: finalPoints }));
 
-    // Trigger AI analysis
-    supabase.functions.invoke("analyze-cognitive", { body: { user_id: user.id } }).catch(console.error);
+    // Trigger AI analysis (now uses cognitive-intelligence)
+    supabase.functions.invoke("cognitive-intelligence", { body: { user_id: user.id } }).catch(console.error);
 
     setQuizState("results");
   };
@@ -246,6 +307,21 @@ export default function TakeQuiz() {
         <Badge variant="secondary">Difficulty: {q.difficulty_level}/5</Badge>
       </div>
       <Progress value={((currentIdx + 1) / questions.length) * 100} className="h-2" />
+
+      {/* Shadow Prediction Insight */}
+      {postQuizInsight && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-primary font-medium flex items-center gap-2">
+          <Zap className="h-4 w-4 shrink-0" />
+          {postQuizInsight}
+        </div>
+      )}
+
+      {prediction && !answered && (
+        <div className="rounded-lg border bg-muted/50 p-3 text-xs text-muted-foreground flex items-center gap-2">
+          <Brain className="h-3.5 w-3.5 shrink-0" />
+          AI Shadow: {Math.round(prediction.predicted_error_probability * 100)}% error risk | ~{Math.round(prediction.predicted_response_time_ms / 1000)}s expected
+        </div>
+      )}
 
       <Card>
         <CardHeader>

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Brain, LayoutDashboard, BookOpen, BarChart3, Lightbulb, FileText,
-  Users, Settings, LogOut, GraduationCap, Layers, Activity, Trophy
+  Users, Settings, LogOut, GraduationCap, Layers, Activity, Trophy,
+  Fingerprint, Zap, Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,8 @@ const studentLinks = [
   { to: "/dashboard/recommendations", label: "Recommendations", icon: Lightbulb },
   { to: "/dashboard/reports", label: "Reports", icon: FileText },
   { to: "/dashboard/leaderboard", label: "Leaderboard", icon: Trophy },
+  { to: "/dashboard/cognitive-drift", label: "Cognitive Intelligence", icon: Fingerprint },
+  { to: "/dashboard/cognitive-energy", label: "Energy & Misconceptions", icon: Zap },
 ];
 
 const teacherLinks = [
@@ -24,6 +27,7 @@ const teacherLinks = [
   { to: "/dashboard/manage-questions", label: "Manage Questions", icon: Layers },
   { to: "/dashboard/students", label: "Student Analysis", icon: Users },
   { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/dashboard/cognitive-intel", label: "Cognitive Intelligence", icon: Shield },
 ];
 
 const adminLinks = [
