@@ -18,13 +18,12 @@ export default function TeacherCognitiveIntel() {
         supabase.from("behavioral_fingerprints").select("user_id, cognitive_predictability_index, cpi_label, signature_summary"),
         supabase.from("cognitive_history").select("user_id, cognitive_type, stability_index, stability_label, created_at").order("created_at", { ascending: false }).limit(200),
         supabase.from("misconception_patterns").select("user_id, misconception_type, frequency").order("frequency", { ascending: false }).limit(50),
-        supabase.from("cognitive_events").select("user_id, event_type, description, created_at").order("created_at", { ascending: false }).limit(20),
+        supabase.from("cognitive_events").select("id, user_id, event_type, description, created_at").order("created_at", { ascending: false }).limit(20),
       ]);
 
       const profileMap: Record<string, string> = {};
       (profilesRes.data || []).forEach((p: any) => { profileMap[p.user_id] = p.display_name || "Unknown"; });
 
-      // Build per-student data
       const studentMap: Record<string, any> = {};
       (fpRes.data || []).forEach((fp: any) => {
         studentMap[fp.user_id] = {
@@ -35,12 +34,9 @@ export default function TeacherCognitiveIntel() {
         };
       });
 
-      // Latest stability per student
       const latestStability: Record<string, any> = {};
       (cogRes.data || []).forEach((h: any) => {
-        if (!latestStability[h.user_id]) {
-          latestStability[h.user_id] = h;
-        }
+        if (!latestStability[h.user_id]) latestStability[h.user_id] = h;
       });
       Object.entries(latestStability).forEach(([uid, h]: [string, any]) => {
         if (!studentMap[uid]) studentMap[uid] = { name: profileMap[uid] || "Unknown" };
@@ -51,19 +47,29 @@ export default function TeacherCognitiveIntel() {
 
       setStudents(Object.entries(studentMap).map(([id, d]) => ({ id, ...d })));
 
-      // Aggregate misconceptions
       const mcAgg: Record<string, number> = {};
       (mcRes.data || []).forEach((m: any) => {
         mcAgg[m.misconception_type] = (mcAgg[m.misconception_type] || 0) + m.frequency;
       });
       setMisconceptions(Object.entries(mcAgg).map(([type, count]) => ({ type, count })).sort((a, b) => b.count - a.count).slice(0, 10));
 
-      // Events with names
       setEvents((evtRes.data || []).map((e: any) => ({ ...e, name: profileMap[e.user_id] || "Unknown" })));
-
       setLoading(false);
     };
     load();
+
+    // Real-time subscription for cognitive events
+    const channel = supabase
+      .channel('teacher-cognitive-events')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cognitive_events' }, () => {
+        load();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cognitive_history' }, () => {
+        load();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   if (loading) return <div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;

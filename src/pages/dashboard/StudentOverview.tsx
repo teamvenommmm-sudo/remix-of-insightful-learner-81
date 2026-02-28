@@ -34,6 +34,15 @@ export default function StudentOverview() {
       setLoading(false);
     };
     load();
+
+    // Real-time: auto-refresh when gamification or sessions update
+    const channel = supabase
+      .channel('student-overview')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_gamification', filter: `user_id=eq.${user.id}` }, () => load())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'session_logs', filter: `user_id=eq.${user.id}` }, () => load())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const accuracyData = sessions.map((s, i) => ({
